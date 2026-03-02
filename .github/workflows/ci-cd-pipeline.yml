@@ -20,7 +20,7 @@ jobs:
     if: true
     defaults:
       run:
-        working-directory: ./money-transfer
+        working-directory: ./
     steps:
 
     - name: 📥 Checkout code
