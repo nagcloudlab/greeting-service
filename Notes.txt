@@ -1,0 +1,16 @@
+
+
+
+github workflow:
+-----------------
+
+-> checkout code. ( github action checkout  script )
+-> code analysis
+-> compile
+-> test
+-> build as jar | image
+-> publish to maven central | docker hub
+-> security scan
+-> deploy to staging
+-> deploy to production
+....

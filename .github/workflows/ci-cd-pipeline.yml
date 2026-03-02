@@ -1,0 +1,82 @@
+
+name: greeting-service CI/CD Pipeline
+
+on:
+  push: # Trigger on pushes to specified branches
+    branches: [ main, develop, feature/** ]
+  pull_request: # Trigger on pull requests to specified branches
+    branches: [ main, develop ]
+  workflow_dispatch: # Manual trigger
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3072m'
+  
+jobs:
+  # Job 1: Static Code Analysis (Shift-Left)
+  static-analysis:
+    name: 🔍 Static Code Analysis
+    runs-on: ubuntu-latest
+    if: true
+    defaults:
+      run:
+        working-directory: ./money-transfer
+    steps:
+
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: ☕ Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: 🏗️ Build Project
+      run: mvn clean compile -DskipTests -B
+    
+    - name: 🔍 Run Checkstyle
+      run: |
+        echo "Running Checkstyle for code style violations..."
+        mvn checkstyle:checkstyle -B || true
+      continue-on-error: true
+    
+    - name: 📊 Run PMD
+      run: |
+        echo "Running PMD for code quality issues..."
+        mvn pmd:pmd -B || true
+      continue-on-error: true
+    
+    - name: 📋 Analysis Summary
+      if: always()
+      run: |
+        echo "=================================="
+        echo "Static Analysis Complete"
+        echo "=================================="
+        if [ -f "target/site/checkstyle.html" ]; then
+          echo "✅ Checkstyle report generated"
+        fi
+        if [ -f "target/site/pmd.html" ]; then
+          echo "✅ PMD report generated"
+        fi
+        echo "Download reports from Artifacts"
+        echo "=================================="
+    
+    - name: 📤 Upload Checkstyle Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: checkstyle-report
+        path: ./target/site/checkstyle.html
+        if-no-files-found: warn
+    
+    - name: 📤 Upload PMD Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pmd-report
+        path: ./target/site/pmd.html
+        if-no-files-found: warn    
